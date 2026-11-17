@@ -14,7 +14,9 @@ from .const import (
     DEFAULT_HEATER_POWER_PREHEAT,
     DEFAULT_HEATER_POWER_HEAT,
     CONF_JET_POWER,
+    CONF_MAX_TOTAL_POWER,
     DEFAULT_JET_POWER,
+    DEFAULT_MAX_TOTAL_POWER,
     CONF_BUBBLE_POWER_L1,
     DEFAULT_BUBBLE_POWER_L1,
     CONF_BUBBLE_POWER_L2,
@@ -126,6 +128,10 @@ def _calculate_total_power(coordinator, config_entry) -> float:
             total_power += heater_preheat_power
         elif heat_state == 3:
             total_power += heater_heat_power
+
+    ceiling = _get_option_int(config_entry, CONF_MAX_TOTAL_POWER, DEFAULT_MAX_TOTAL_POWER)
+    if ceiling > 0:
+        total_power = min(total_power, ceiling)
 
     return total_power
 

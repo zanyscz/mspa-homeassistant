@@ -23,9 +23,11 @@ from .const import (
     CONF_BUBBLE_POWER_L1,
     CONF_BUBBLE_POWER_L2,
     CONF_JET_POWER,
+    CONF_MAX_TOTAL_POWER,
     DEFAULT_BUBBLE_POWER_L1,
     DEFAULT_BUBBLE_POWER_L2,
     DEFAULT_JET_POWER,
+    DEFAULT_MAX_TOTAL_POWER,
     DEFAULT_HEATER_POWER_PREHEAT,
     DEFAULT_HEATER_POWER_HEAT,
     CONF_TRACK_TEMPERATURE_UNIT,
@@ -263,6 +265,7 @@ class MSpaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 OPTION_KEYS = frozenset({
     "pump_power", "bubble_power", "heater_power_preheat", "heater_power_heat",
     CONF_BUBBLE_POWER_L1, CONF_BUBBLE_POWER_L2, CONF_JET_POWER,
+    CONF_MAX_TOTAL_POWER,
     CONF_TRACK_TEMPERATURE_UNIT, CONF_ALWAYS_ENFORCE_UNIT, CONF_RESTORE_STATE,
     CONF_UVC_KEEP_FILTER, CONF_HEATER_KEEP_FILTER, CONF_WEATHER_ENTITY,
     CONF_SCHEDULE_TARGET_TEMP,
@@ -315,6 +318,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             vol.Optional(
                 "heater_power_heat",
                 default=self.config_entry.options.get("heater_power_heat", DEFAULT_HEATER_POWER_HEAT),
+            ): vol.All(int, vol.Range(min=0)),
+            vol.Optional(
+                CONF_MAX_TOTAL_POWER,
+                default=self.config_entry.options.get(CONF_MAX_TOTAL_POWER, DEFAULT_MAX_TOTAL_POWER),
             ): vol.All(int, vol.Range(min=0)),
             vol.Optional(
                 CONF_TRACK_TEMPERATURE_UNIT,

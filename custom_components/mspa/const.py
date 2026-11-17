@@ -112,6 +112,11 @@ CONF_JET_POWER = "jet_power"
 DEFAULT_BUBBLE_POWER_L1 = 300
 DEFAULT_BUBBLE_POWER_L2 = 450
 DEFAULT_JET_POWER = 1100
+# Ceiling on the summed draw. The cloud keeps reporting heat_state 3 while the
+# blower or the jet pump runs, yet the spa never draws heater and massage together:
+# the Oslo is rated 2300 W with everything on. 0 leaves the sum uncapped.
+CONF_MAX_TOTAL_POWER = "max_total_power"
+DEFAULT_MAX_TOTAL_POWER = 0
 DEFAULT_HEATER_POWER_PREHEAT = 1500  # Heating element: 1500W (preheat mode)
 DEFAULT_HEATER_POWER_HEAT = 2000  # Heating element in active heating (estimated)
 

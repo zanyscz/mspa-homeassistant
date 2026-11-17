@@ -19,6 +19,8 @@ from custom_components.mspa.binary_sensor import (
 from custom_components.mspa.const import (
     CONF_BUBBLE_POWER_L1,
     CONF_JET_POWER,
+    CONF_MAX_TOTAL_POWER,
+    DEFAULT_HEATER_POWER_HEAT,
     DEFAULT_BUBBLE_POWER,
     DEFAULT_BUBBLE_POWER_L1,
     DEFAULT_BUBBLE_POWER_L2,
@@ -183,6 +185,17 @@ class TestPowerModel:
 
     def test_jets_add_the_jet_pump(self):
         assert self._power(jet="on") == DEFAULT_JET_POWER
+
+    def test_the_sum_is_uncapped_by_default(self):
+        assert self._power(heater="on", heat_state=3, jet="on") == (
+            DEFAULT_HEATER_POWER_HEAT + DEFAULT_JET_POWER)
+
+    def test_the_sum_stops_at_the_rated_maximum(self):
+        assert self._power({CONF_MAX_TOTAL_POWER: 2300},
+                           heater="on", heat_state=3, jet="on") == 2300
+
+    def test_the_ceiling_leaves_a_lower_sum_alone(self):
+        assert self._power({CONF_MAX_TOTAL_POWER: 2300}, jet="on") == DEFAULT_JET_POWER
 
     def test_jet_power_is_an_option(self):
         assert self._power({CONF_JET_POWER: 0}, jet="on") == 0
