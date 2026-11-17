@@ -232,6 +232,25 @@ class TestDiagnostics:
         for secret in ("owner@example.com", "hash", "dev-1", "uuid-1", "PEM"):
             assert secret not in text
         assert out["status"]["water_temperature"] == 20.0
+
+    def test_an_id_repeated_inside_another_field_is_scrubbed_too(self):
+        """The cloud's storage keys are the device id with a prefix."""
+        entry = MagicMock()
+        entry.data = {"device_id": "b6580127abcdef"}
+        entry.options = {}
+        coord = MagicMock()
+        coord._last_data = {}
+        coord.device_id = "b6580127abcdef"
+        coord.serial_number = None
+        coord.mac_address = None
+        coord.device_detail = {"mystery_key": "pd_6AI9NK_b6580127abcdef",
+                               "activate_ip": "203.0.113.7", "country": "CZ"}
+        out = build_diagnostics(entry, coord)
+        text = json.dumps(out, default=str)
+        assert "b6580127abcdef" not in text
+        assert "203.0.113.7" not in text
+        assert out["device_detail"]["mystery_key"] == f"pd_6AI9NK_{REDACTED}"
+        assert out["device_detail"]["country"] == "CZ"
         assert out["entry"]["data"]["region"] == "ROW"
         assert out["entry"]["options"] == {"pump_power": 60}
         assert out["device_detail"]["warning"] == "A0"
