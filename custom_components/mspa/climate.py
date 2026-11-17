@@ -8,6 +8,9 @@ from homeassistant.const import PRECISION_HALVES
 from .const import DOMAIN, TEMP_UNIT, MAX_TEMP, MIN_TEMP
 from .entity import MSpaClimateEntity
 
+# True on Home Assistant 2026.11 and later, where ClimateEntity reads `native_*`.
+_NATIVE_TEMPERATURE_API = hasattr(ClimateEntity, "native_current_temperature")
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -21,7 +24,15 @@ class MSpaClimate(MSpaClimateEntity):
     _attr_precision = PRECISION_HALVES
     _attr_min_temp = MIN_TEMP
     _attr_max_temp = MAX_TEMP
-    _attr_temperature_unit = TEMP_UNIT
+    # Home Assistant 2026.11 renamed the unit and the two readings to `native_*` and
+    # deprecated the old names, which stop working in 2027.11. `hacs.json` still allows
+    # 2026.3, where only the old names are read, so the class declares whichever set the
+    # running Home Assistant understands. Declaring both would keep the warning alive:
+    # it fires on the old names being *provided*, not on them being read.
+    if _NATIVE_TEMPERATURE_API:
+        _attr_native_temperature_unit = TEMP_UNIT
+    else:
+        _attr_temperature_unit = TEMP_UNIT
 
     def __init__(self, coordinator):
         super().__init__(coordinator)
@@ -50,13 +61,18 @@ class MSpaClimate(MSpaClimateEntity):
         """
         return getattr(self.coordinator, "product_pic_url", None)
 
-    @property
-    def current_temperature(self):
+    def _water_temperature(self):
         return self.coordinator.last_data.get("water_temperature")
 
-    @property
-    def target_temperature(self):
+    def _target_temperature(self):
         return self.coordinator.last_data.get("target_temperature")
+
+    if _NATIVE_TEMPERATURE_API:
+        native_current_temperature = property(_water_temperature)
+        native_target_temperature = property(_target_temperature)
+    else:
+        current_temperature = property(_water_temperature)
+        target_temperature = property(_target_temperature)
 
     async def async_set_temperature(self, **kwargs):
         temperature = kwargs.get("temperature")

@@ -75,6 +75,9 @@ _switch_mod          = MagicMock(); _switch_mod.SwitchEntity = _SwitchEntity
 _number_mod          = MagicMock(); _number_mod.NumberEntity = _NumberEntity
 _binary_mod          = MagicMock(); _binary_mod.BinarySensorEntity = _BinarySensorEntity
 _climate_mod         = MagicMock(); _climate_mod.ClimateEntity = _ClimateEntity
+# climate.py imports from `homeassistant.components.climate.const`, so the stub has to
+# pass for a package: Python checks the parent for `__path__` before the submodule.
+_climate_mod.__path__ = []
 _datetime_mod        = MagicMock(); _datetime_mod.DateTimeEntity = _DateTimeEntity
 _button_mod          = MagicMock(); _button_mod.ButtonEntity = _ButtonEntity
 _coordinator_mod     = MagicMock(); _coordinator_mod.CoordinatorEntity = _CoordinatorEntity; _coordinator_mod.DataUpdateCoordinator = _DataUpdateCoordinator; _coordinator_mod.UpdateFailed = _UpdateFailed
@@ -134,6 +137,7 @@ sys.modules.update({
     "homeassistant.components.number":              _number_mod,
     "homeassistant.components.binary_sensor":       _binary_mod,
     "homeassistant.components.climate":             _climate_mod,
+    "homeassistant.components.climate.const":       MagicMock(),
     "homeassistant.components.datetime":            _datetime_mod,
     "homeassistant.components.button":              _button_mod,
     "homeassistant.helpers":                        _helpers_mod,
