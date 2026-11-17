@@ -237,6 +237,18 @@ class TestDiagnostics:
         assert out["device_detail"]["warning"] == "A0"
         assert out["coordinator"]["model"] == "F-AM063W"
 
+    def test_an_alias_equal_to_the_model_does_not_erase_the_model(self):
+        entry = MagicMock(); entry.data = {}; entry.options = {}
+        coord = MagicMock()
+        coord._last_data = {}
+        coord.device_id = coord.serial_number = coord.mac_address = None
+        coord.model = "F-AM063W"
+        coord.device_detail = {"name": "F-AM063W", "product_model": "F-AM063W"}
+        out = build_diagnostics(entry, coord)
+        assert out["device_detail"]["name"] == REDACTED
+        assert out["device_detail"]["product_model"] == "F-AM063W"
+        assert out["coordinator"]["model"] == "F-AM063W"
+
     def test_an_id_repeated_inside_another_field_is_scrubbed_too(self):
         """The cloud's storage keys are the device id with a prefix."""
         entry = MagicMock()

@@ -38,6 +38,12 @@ _COORDINATOR_FIELDS = (
 )
 
 
+# Redacted where they stand, but not hunted down elsewhere. An unnamed spa's alias is
+# its model number, and scrubbing every occurrence of that would remove the one field a
+# bug report most needs.
+_LABELS = frozenset({"name", "title", "device_alias"})
+
+
 def redact(value: Any) -> Any:
     """Return a copy of `value` with identifying fields replaced, at any depth."""
     if isinstance(value, dict):
@@ -62,7 +68,9 @@ def _secrets(value: Any, found: set | None = None) -> set:
     found = set() if found is None else found
     if isinstance(value, dict):
         for k, v in value.items():
-            if isinstance(k, str) and k.lower() in TO_REDACT and isinstance(v, str) and len(v) >= 6:
+            if (isinstance(k, str) and k.lower() in TO_REDACT
+                    and k.lower() not in _LABELS
+                    and isinstance(v, str) and len(v) >= 6):
                 found.add(v)
             else:
                 _secrets(v, found)
