@@ -232,6 +232,10 @@ class TestDiagnostics:
         for secret in ("owner@example.com", "hash", "dev-1", "uuid-1", "PEM"):
             assert secret not in text
         assert out["status"]["water_temperature"] == 20.0
+        assert out["entry"]["data"]["region"] == "ROW"
+        assert out["entry"]["options"] == {"pump_power": 60}
+        assert out["device_detail"]["warning"] == "A0"
+        assert out["coordinator"]["model"] == "F-AM063W"
 
     def test_an_id_repeated_inside_another_field_is_scrubbed_too(self):
         """The cloud's storage keys are the device id with a prefix."""
@@ -251,10 +255,6 @@ class TestDiagnostics:
         assert "203.0.113.7" not in text
         assert out["device_detail"]["mystery_key"] == f"pd_6AI9NK_{REDACTED}"
         assert out["device_detail"]["country"] == "CZ"
-        assert out["entry"]["data"]["region"] == "ROW"
-        assert out["entry"]["options"] == {"pump_power": 60}
-        assert out["device_detail"]["warning"] == "A0"
-        assert out["coordinator"]["model"] == "F-AM063W"
 
 
 def _keys(node, prefix=""):
