@@ -81,9 +81,14 @@ def _bubble_power_for_level(config_entry, level) -> int:
     """The blower's draw at the level it is running at.
 
     The blower has three speeds and they are not close: the Oslo manual gives 300,
-    450 and 700 W. `bubble_power` is the full-speed figure it always was, so an
-    install that never opens the options sees the same number at level 3, and a
-    payload with no level at all is treated as full speed for the same reason.
+    450 and 700 W. `bubble_power` is the full-speed figure it always was (900 W by
+    default), so an install that never opens the options sees the same number at
+    level 3, and a payload with no level at all is treated as full speed for the
+    same reason.
+
+    A lower level never reports more than full speed. Someone who set `bubble_power`
+    to 400 for a smaller blower, before the level options existed, would otherwise
+    read 450 W at level 2 and 400 W at level 3.
     """
     full = _get_option_int(config_entry, "bubble_power", DEFAULT_BUBBLE_POWER)
     try:
@@ -91,9 +96,11 @@ def _bubble_power_for_level(config_entry, level) -> int:
     except (TypeError, ValueError):
         return full
     if level == 1:
-        return _get_option_int(config_entry, CONF_BUBBLE_POWER_L1, DEFAULT_BUBBLE_POWER_L1)
+        return min(full, _get_option_int(
+            config_entry, CONF_BUBBLE_POWER_L1, DEFAULT_BUBBLE_POWER_L1))
     if level == 2:
-        return _get_option_int(config_entry, CONF_BUBBLE_POWER_L2, DEFAULT_BUBBLE_POWER_L2)
+        return min(full, _get_option_int(
+            config_entry, CONF_BUBBLE_POWER_L2, DEFAULT_BUBBLE_POWER_L2))
     return full
 
 

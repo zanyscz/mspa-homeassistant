@@ -94,6 +94,22 @@ class TestPanelLockCommand:
         assert c._pending_changes == {}
         c.async_request_refresh.assert_not_awaited()
 
+    def test_a_network_error_becomes_a_readable_one(self):
+        c = _coord(safety_lock=0)
+        c.api.set_safety_lock = AsyncMock(side_effect=OSError("no route"))
+        with pytest.raises(HomeAssistantError):
+            _run(c.set_panel_lock(True))
+        assert c._pending_changes == {}
+
+    def test_it_does_not_hand_a_waiting_command_another_retry(self):
+        c = _coord(safety_lock=0)
+        c._pending_changes = {"heater": "on"}
+        c._pending_raw_command = {"heater_state": 1}
+        c._command_retry_count = 1
+        _run(c.set_panel_lock(True))
+        assert c._command_retry_count == 1
+        assert c._pending_changes == {"heater": "on", "safety_lock": 1}
+
     def test_a_fault_does_not_block_the_lock(self):
         """Locking the panel of a faulting spa is a reasonable thing to want."""
         c = _coord(safety_lock=0, fault="F1")
@@ -180,6 +196,9 @@ class TestPowerModel:
     ])
     def test_bubbles_draw_what_their_level_draws(self, level, expected):
         assert self._power(bubble="on", bubble_level=level) == expected
+
+    def test_a_lower_level_never_reads_above_full_speed(self):
+        assert self._power({"bubble_power": 400}, bubble="on", bubble_level=2) == 400
 
     def test_level_power_is_an_option(self):
         assert self._power({CONF_BUBBLE_POWER_L1: 123},

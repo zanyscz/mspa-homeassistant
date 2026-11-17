@@ -5424,12 +5424,23 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
         value = 1 if locked else 0
         _LOGGER.info("Command: set panel lock → %s (currently %s)",
                      value, self._last_data.get("safety_lock"))
-        response = await self.api.set_safety_lock(value)
+        try:
+            response = await self.api.set_safety_lock(value)
+        except Exception as err:
+            raise HomeAssistantError(
+                f"The panel lock command could not be sent to the MSpa cloud: {err}"
+            ) from err
         if not (isinstance(response, dict) and response.get("message") == "SUCCESS"):
             raise HomeAssistantError(
                 f"The spa did not accept the panel lock command (response: {response!r})."
             )
+        # A command already waiting keeps its retry budget. `_enable_rapid_polling`
+        # resets the count whenever it is handed a raw command, which is right for a
+        # fresh command and wrong here: a heater-on that had used its one retry would
+        # be given another, and resent alongside the lock.
+        retries_used = self._command_retry_count if self._pending_changes else 0
         self._enable_rapid_polling({"safety_lock": value}, {"safety_lock": value})
+        self._command_retry_count = retries_used
         await self.async_request_refresh()
 
     async def set_temperature(self, service: ServiceCall) -> None:
