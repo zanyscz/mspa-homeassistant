@@ -13,6 +13,12 @@ from .const import (
     DEFAULT_BUBBLE_POWER,
     DEFAULT_HEATER_POWER_PREHEAT,
     DEFAULT_HEATER_POWER_HEAT,
+    CONF_JET_POWER,
+    DEFAULT_JET_POWER,
+    CONF_BUBBLE_POWER_L1,
+    DEFAULT_BUBBLE_POWER_L1,
+    CONF_BUBBLE_POWER_L2,
+    DEFAULT_BUBBLE_POWER_L2,
     CONF_SCHEDULE_LOOKAHEAD_DAYS,
     DEFAULT_SCHEDULE_LOOKAHEAD_DAYS,
 )
@@ -71,6 +77,26 @@ def _get_option_int(config_entry, key: str, default: int) -> int:
         return default
 
 
+def _bubble_power_for_level(config_entry, level) -> int:
+    """The blower's draw at the level it is running at.
+
+    The blower has three speeds and they are not close: the Oslo manual gives 300,
+    450 and 700 W. `bubble_power` is the full-speed figure it always was, so an
+    install that never opens the options sees the same number at level 3, and a
+    payload with no level at all is treated as full speed for the same reason.
+    """
+    full = _get_option_int(config_entry, "bubble_power", DEFAULT_BUBBLE_POWER)
+    try:
+        level = int(level)
+    except (TypeError, ValueError):
+        return full
+    if level == 1:
+        return _get_option_int(config_entry, CONF_BUBBLE_POWER_L1, DEFAULT_BUBBLE_POWER_L1)
+    if level == 2:
+        return _get_option_int(config_entry, CONF_BUBBLE_POWER_L2, DEFAULT_BUBBLE_POWER_L2)
+    return full
+
+
 def _calculate_total_power(coordinator, config_entry) -> float:
     """Calculate total power consumption in watts from all active components."""
     total_power = 0
@@ -84,7 +110,9 @@ def _calculate_total_power(coordinator, config_entry) -> float:
     if data.get("filter") == "on":
         total_power += pump_power
     if data.get("bubble") == "on":
-        total_power += bubble_power
+        total_power += _bubble_power_for_level(config_entry, data.get("bubble_level"))
+    if data.get("jet") == "on":
+        total_power += _get_option_int(config_entry, CONF_JET_POWER, DEFAULT_JET_POWER)
     if data.get("heater") == "on":
         heat_state = data.get("heat_state")
         if heat_state == 2:
@@ -107,6 +135,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([MSpaFilterSensor(coordinator)], update_before_add=True)
     async_add_entities([MSpaHeaterTimerBinarySensor(coordinator)], update_before_add=True)
     async_add_entities([MSpaHeaterTimerTimeSensor(coordinator)], update_before_add=True)
+    async_add_entities([MSpaHeatingStateSensor(coordinator)])
     # Pass the config entry so the power sensors can read per-device options
     async_add_entities([MSpaHeaterPowerSensor(coordinator, entry)], update_before_add=True)
     async_add_entities([MSpaTotalPowerSensor(coordinator, entry)], update_before_add=True)
@@ -1963,6 +1992,35 @@ class MSpaHeaterTimerBinarySensor(MSpaBinarySensorEntity):
     def icon(self):
         return "mdi:timer-outline" if self.is_on else "mdi:timer-off-outline"
 
+class MSpaHeatingStateSensor(MSpaSensorEntity):
+    """What the heater is doing, as a word rather than the payload's number.
+
+    `heat_state` is 0 with the heater off, 2 while the element warms up, 3 at full
+    heat and 4 once the target is reached and the spa is holding. The climate entity
+    reports the same thing as `hvac_action`, but an attribute cannot be put on a
+    history graph or used as a plain state trigger, and this can. Any other number
+    reads as unknown rather than being given a meaning nobody has confirmed.
+    """
+
+    name = "Heating state"
+    _attr_icon = "mdi:fire"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_translation_key = "heating_state"
+    _attr_options = ["off", "preheating", "heating", "holding"]
+
+    _STATES = {0: "off", 2: "preheating", 3: "heating", 4: "holding"}
+
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+        self._attr_device_info = self.device_info
+        self._attr_unique_id = (
+            f"mspa_heating_state_{getattr(coordinator, 'device_id', 'unknown')}")
+
+    @property
+    def native_value(self):
+        return self._STATES.get(self.coordinator._last_data.get("heat_state"))
+
+
 class MSpaHeaterTimerTimeSensor(MSpaSensorEntity):
     name = "Heater timer remaining"
     _attr_native_unit_of_measurement = "h"
@@ -2060,11 +2118,21 @@ class MSpaTotalPowerSensor(MSpaSensorEntity):
         filter_on = self.coordinator._last_data.get("filter") == "on"
         bubble_on = self.coordinator._last_data.get("bubble") == "on"
         heater_on = self.coordinator._last_data.get("heater") == "on"
+        jet_on = self.coordinator._last_data.get("jet") == "on"
         heat_state = self.coordinator._last_data.get("heat_state")
-        
+        jet_power = _get_option_int(self._config_entry, CONF_JET_POWER, DEFAULT_JET_POWER)
+        bubble_now = _bubble_power_for_level(
+            self._config_entry, self.coordinator._last_data.get("bubble_level"))
+
         return {
             "pump_power": pump_power if filter_on else 0,
-            "bubble_power": bubble_power if bubble_on else 0,
+            "bubble_power": bubble_now if bubble_on else 0,
+            "jet_power": jet_power if jet_on else 0,
+            "configured_jet_power": jet_power,
+            "configured_bubble_power_level_1": _get_option_int(
+                self._config_entry, CONF_BUBBLE_POWER_L1, DEFAULT_BUBBLE_POWER_L1),
+            "configured_bubble_power_level_2": _get_option_int(
+                self._config_entry, CONF_BUBBLE_POWER_L2, DEFAULT_BUBBLE_POWER_L2),
             "heater_power": (heater_preheat_power if heat_state == 2 else heater_heat_power if heat_state == 3 else 0) if heater_on else 0,
             "configured_pump_power": pump_power,
             "configured_bubble_power": bubble_power,

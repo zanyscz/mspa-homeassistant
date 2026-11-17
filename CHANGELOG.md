@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Panel lock switch.** Locks and unlocks the buttons on the spa's own control panel
+  (`safety_lock`, the UP + DOWN gesture). Created only where the spa reports the key,
+  and stays operable while the spa is faulting.
+- **Problem binary sensor.** On while the spa reports a fault code, with the code and,
+  where the manual documents it, what it means. Easier to trigger on than the Fault
+  sensor's text.
+- **Filter change due binary sensor.** Mirrors warning `A0`. Disabled by default, like
+  the Filter status sensor it sits beside.
+- **Heating state sensor.** `heat_state` as off / preheating / heating / holding, so it
+  can be graphed and used as a state trigger.
+- **Diagnostics.** *Download diagnostics* now returns the status payload, the device
+  detail record and the polling state, with account and unit identifiers redacted.
+- **Jet pump and per-level bubble power.** Total power now counts the hydro jets
+  (1100 W by default) and uses a separate figure for bubble levels 1 and 2 (300 W and
+  450 W); `bubble_power` remains the full-speed figure. All are options.
+- **Czech translation.**
+
+### Changed
+
+- The climate entity uses Home Assistant's `native_*` temperature API where it exists
+  (2026.11 and later) and the previous names elsewhere, which clears the deprecation
+  warnings without raising the minimum version.
+- `iot_class` is `cloud_polling`: the integration only ever talks to the MSpa cloud.
+
 - **The filter is kept running when the heater is switched off.** The spa stops the
   pump at the end of its post-heat purge, ~45 s later; the pump is started again as
   soon as that stop is seen, and the poll runs at 5 s while waiting. Not done if the

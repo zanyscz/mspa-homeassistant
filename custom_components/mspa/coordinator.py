@@ -287,6 +287,7 @@ _PENDING_TO_RAW_KEY: dict[str, str] = {
     "bubble_level": "bubble_level",
     "target_temperature": "temperature_setting",
     "temperature_unit": "temperature_unit",
+    "safety_lock": "safety_lock",
 }
 
 # Status payload keys that are explicitly restructured/renamed in transformed_data.
@@ -5407,6 +5408,29 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
         except Exception as err:
             _LOGGER.error("Failed to set %s to %s: %s", feature, state, str(err))
             raise
+
+    async def set_panel_lock(self, locked: bool) -> None:
+        """Lock or unlock the buttons on the spa's own control panel.
+
+        Kept apart from `set_feature_state` on purpose. That path exists for things
+        that run — it leads with the pump, carries the filter rider and refuses to
+        switch anything on while a fault stands. None of it applies to a key lock,
+        and the last would be actively wrong: locking the panel of a faulting spa is
+        a reasonable thing to want.
+
+        `safety_lock` is passed through from the payload verbatim as 0/1, so the
+        expectation is the integer rather than the "on"/"off" the features use.
+        """
+        value = 1 if locked else 0
+        _LOGGER.info("Command: set panel lock → %s (currently %s)",
+                     value, self._last_data.get("safety_lock"))
+        response = await self.api.set_safety_lock(value)
+        if not (isinstance(response, dict) and response.get("message") == "SUCCESS"):
+            raise HomeAssistantError(
+                f"The spa did not accept the panel lock command (response: {response!r})."
+            )
+        self._enable_rapid_polling({"safety_lock": value}, {"safety_lock": value})
+        await self.async_request_refresh()
 
     async def set_temperature(self, service: ServiceCall) -> None:
         """Set the target temperature."""

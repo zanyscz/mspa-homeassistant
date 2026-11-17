@@ -43,7 +43,10 @@
         "description": "Configure the power consumption values for accurate energy monitoring. These values are based on your hot tub model specifications but can be adjusted to match your actual measurements.",
         "data": {
           "pump_power": "Pump/Filter Power (Watts)",
-          "bubble_power": "Bubble Generator Power (Watts)",
+          "bubble_power": "Bubble Generator Power, level 3 (Watts)",
+          "bubble_power_level_1": "Bubble Generator Power, level 1 (Watts)",
+          "bubble_power_level_2": "Bubble Generator Power, level 2 (Watts)",
+          "jet_power": "Hydro Jet Pump Power (Watts)",
           "heater_power_preheat": "Heater Preheat Power (Watts)",
           "heater_power_heat": "Heater Active Heating Power (Watts)",
           "track_temperature_unit": "Reset the spa's °C/°F after a power cut",
@@ -57,7 +60,10 @@
         },
         "data_description": {
           "pump_power": "Power consumption when the filter pump is running (typically 60W)",
-          "bubble_power": "Power consumption when bubbles are active (typically 900W)",
+          "bubble_power": "Power consumption with bubbles at full speed, level 3 (typically 900W)",
+          "bubble_power_level_1": "Power consumption with bubbles at level 1 (typically 300W)",
+          "bubble_power_level_2": "Power consumption with bubbles at level 2 (typically 450W)",
+          "jet_power": "Power consumption when the hydro jets are running (typically 1100W). Set to 0 if your spa has no jets.",
           "heater_power_preheat": "Power consumption during preheat mode (typically 1500W)",
           "heater_power_heat": "Power consumption during active heating (typically 2000W)",
           "track_temperature_unit": "The spa forgets whether it is set to Celsius or Fahrenheit when it loses power. When it comes back online, set it again to match Home Assistant.",
@@ -95,6 +101,14 @@
           "start_now": "Start now",
           "heating": "Heating",
           "ready": "Ready"
+        }
+      },
+      "heating_state": {
+        "state": {
+          "off": "Off",
+          "preheating": "Preheating",
+          "heating": "Heating",
+          "holding": "Holding temperature"
         }
       }
     }

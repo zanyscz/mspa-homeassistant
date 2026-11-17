@@ -1,3 +1,4 @@
+from homeassistant.const import EntityCategory
 from .const import DOMAIN
 from .entity import MSpaSwitchEntity
 from .coordinator import MSpaUpdateCoordinator
@@ -16,6 +17,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
         MSpaOzoneSwitch(coordinator),
         MSpaUVCSwitch(coordinator)
     ]
+    # Only where the spa reports the key at all: a switch for a lock the firmware
+    # does not have would sit there never confirming.
+    if "safety_lock" in coordinator._last_data:
+        entities.append(MSpaPanelLockSwitch(coordinator))
     async_add_entities(entities, update_before_add=True)
 
 class MSpaFeatureSwitch(MSpaSwitchEntity):
@@ -120,3 +125,41 @@ class MSpaBubbleSwitch(MSpaFeatureSwitch):
     feature = "bubble"
     icon = "mdi:chart-bubble"
     name = "Bubble"
+
+class MSpaPanelLockSwitch(MSpaSwitchEntity):
+    """Locks the buttons on the spa's own control panel.
+
+    The panel calls it the safety lock: UP and DOWN held together for three seconds.
+    While it is on the panel ignores every press and the spa keeps its settings, which
+    is what you want with children around a tub that is heating. Commands from Home
+    Assistant and from the MSpa Link app are unaffected by it.
+
+    Not a feature switch. Those go through the path that leads with the pump and
+    refuses to switch anything on during a fault, neither of which has anything to do
+    with a key lock — so this one stays operable while the spa is faulting.
+    """
+
+    name = "Panel lock"
+    _attr_entity_category = EntityCategory.CONFIG
+    _unavailable_while_faulting = False
+
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+        self._attr_device_info = self.device_info
+        self._attr_unique_id = (
+            f"mspa_panel_lock_{getattr(coordinator, 'device_id', 'unknown')}")
+
+    @property
+    def icon(self):
+        return "mdi:lock" if self.is_on else "mdi:lock-open-variant"
+
+    @property
+    def is_on(self):
+        value = self.coordinator._last_data.get("safety_lock")
+        return None if value is None else bool(value)
+
+    async def async_turn_on(self, **kwargs):
+        await self.coordinator.set_panel_lock(True)
+
+    async def async_turn_off(self, **kwargs):
+        await self.coordinator.set_panel_lock(False)

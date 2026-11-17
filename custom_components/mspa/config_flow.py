@@ -20,6 +20,12 @@ from .const import (
     CONF_OFFLINE_AFTER_MINUTES,
     DEFAULT_OFFLINE_AFTER_MINUTES,
     DEFAULT_BUBBLE_POWER,
+    CONF_BUBBLE_POWER_L1,
+    CONF_BUBBLE_POWER_L2,
+    CONF_JET_POWER,
+    DEFAULT_BUBBLE_POWER_L1,
+    DEFAULT_BUBBLE_POWER_L2,
+    DEFAULT_JET_POWER,
     DEFAULT_HEATER_POWER_PREHEAT,
     DEFAULT_HEATER_POWER_HEAT,
     CONF_TRACK_TEMPERATURE_UNIT,
@@ -256,6 +262,7 @@ class MSpaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 # test_options_flow_key_list_matches_the_form keeps the two in step.
 OPTION_KEYS = frozenset({
     "pump_power", "bubble_power", "heater_power_preheat", "heater_power_heat",
+    CONF_BUBBLE_POWER_L1, CONF_BUBBLE_POWER_L2, CONF_JET_POWER,
     CONF_TRACK_TEMPERATURE_UNIT, CONF_ALWAYS_ENFORCE_UNIT, CONF_RESTORE_STATE,
     CONF_UVC_KEEP_FILTER, CONF_HEATER_KEEP_FILTER, CONF_WEATHER_ENTITY,
     CONF_SCHEDULE_TARGET_TEMP,
@@ -288,6 +295,18 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             vol.Optional(
                 "bubble_power",
                 default=self.config_entry.options.get("bubble_power", DEFAULT_BUBBLE_POWER),
+            ): vol.All(int, vol.Range(min=0)),
+            vol.Optional(
+                CONF_BUBBLE_POWER_L1,
+                default=self.config_entry.options.get(CONF_BUBBLE_POWER_L1, DEFAULT_BUBBLE_POWER_L1),
+            ): vol.All(int, vol.Range(min=0)),
+            vol.Optional(
+                CONF_BUBBLE_POWER_L2,
+                default=self.config_entry.options.get(CONF_BUBBLE_POWER_L2, DEFAULT_BUBBLE_POWER_L2),
+            ): vol.All(int, vol.Range(min=0)),
+            vol.Optional(
+                CONF_JET_POWER,
+                default=self.config_entry.options.get(CONF_JET_POWER, DEFAULT_JET_POWER),
             ): vol.All(int, vol.Range(min=0)),
             vol.Optional(
                 "heater_power_preheat",

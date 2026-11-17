@@ -50,7 +50,11 @@ def connectivity(last_seen_utc, now_utc, grace_seconds):
 
 async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([MSpaConnectivity(coordinator)])
+    entities = [MSpaConnectivity(coordinator), MSpaProblem(coordinator)]
+    # The filter warning arrives in the status payload on firmware that has it.
+    if "warning" in coordinator._last_data:
+        entities.append(MSpaFilterChangeDue(coordinator))
+    async_add_entities(entities)
 
 
 class MSpaConnectivity(MSpaBinarySensorEntity):
@@ -113,3 +117,80 @@ class MSpaConnectivity(MSpaBinarySensorEntity):
             "offline_minutes": round(offline / 60.0, 1) if offline is not None else None,
             "grace_minutes": round(self._grace_seconds / 60.0, 1),
         }
+
+
+# What the spa shows on its panel for each fault, as far as the owner's manuals say.
+# Only codes with a documented meaning are listed; anything else is reported by code
+# alone rather than given a guessed description.
+FAULT_DESCRIPTIONS = {
+    "F1": "Water flow or temperature sensor fault. Check the water level, clean the "
+          "filter and the pipes, then power-cycle the control box.",
+}
+
+# The one warning code whose meaning is established: the panel's filter indicator.
+WARNING_FILTER_CHANGE = "A0"
+
+
+class MSpaProblem(MSpaBinarySensorEntity):
+    """On while the spa reports a fault code.
+
+    The Fault sensor already carries the code, but a code is awkward to trigger on:
+    an automation has to know that "OK" is the healthy value and that everything
+    else is not. This is the same information as a plain problem / no problem, which
+    is what a notification or a dashboard badge wants.
+    """
+
+    name = "Problem"
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+        self._attr_device_info = self.device_info
+        self._attr_unique_id = (
+            f"mspa_problem_{getattr(coordinator, 'device_id', 'unknown')}")
+
+    @property
+    def is_on(self):
+        return self.coordinator.fault_code is not None
+
+    @property
+    def extra_state_attributes(self):
+        code = self.coordinator.fault_code
+        return {
+            "fault_code": code,
+            "description": FAULT_DESCRIPTIONS.get(code) if code else None,
+        }
+
+
+class MSpaFilterChangeDue(MSpaBinarySensorEntity):
+    """On while the spa is asking for its filter cartridge to be changed.
+
+    Mirrors warning code A0, the filter indicator on the panel. Disabled by default
+    for the same reason the Filter status sensor is: on some units the flag stays set
+    after the reminder has been reset at the panel, so it is offered rather than
+    imposed. The warning code is in the attributes for anyone comparing the two.
+    """
+
+    name = "Filter change due"
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+    _attr_icon = "mdi:air-filter"
+
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+        self._attr_device_info = self.device_info
+        self._attr_unique_id = (
+            f"mspa_filter_change_due_{getattr(coordinator, 'device_id', 'unknown')}")
+
+    @property
+    def is_on(self):
+        warning = self.coordinator._last_data.get("warning")
+        if warning is None:
+            return None
+        return warning == WARNING_FILTER_CHANGE
+
+    @property
+    def extra_state_attributes(self):
+        return {"warning_code": self.coordinator._last_data.get("warning") or None}

@@ -103,6 +103,15 @@ DEFAULT_OFFLINE_AFTER_MINUTES = 10
 
 DEFAULT_PUMP_POWER = 60  # Filter pump: 2000l/t, 60W, 12V
 DEFAULT_BUBBLE_POWER = 900  # Bubble generator: 900W (1.2HP)
+# The blower's two lower speeds, and the hydro jet pump. The level figures are the
+# Oslo owner's manual's (L1 300 W, L2 450 W); the jet pump is the 1100 W the Oslo
+# specification gives. All three are options, since other models differ.
+CONF_BUBBLE_POWER_L1 = "bubble_power_level_1"
+CONF_BUBBLE_POWER_L2 = "bubble_power_level_2"
+CONF_JET_POWER = "jet_power"
+DEFAULT_BUBBLE_POWER_L1 = 300
+DEFAULT_BUBBLE_POWER_L2 = 450
+DEFAULT_JET_POWER = 1100
 DEFAULT_HEATER_POWER_PREHEAT = 1500  # Heating element: 1500W (preheat mode)
 DEFAULT_HEATER_POWER_HEAT = 2000  # Heating element in active heating (estimated)
 

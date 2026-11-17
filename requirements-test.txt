@@ -4,3 +4,7 @@
 # failure spent an entire development session switched off without anyone noticing.
 pytest>=8
 pyflakes>=3
+# mspa_api imports requests at module level, and the dev-options loader parses YAML;
+# Home Assistant ships both, a bare test environment does not.
+requests
+pyyaml

@@ -579,6 +579,10 @@ class MSpaApiClient:
         return await self.send_device_command(
             _desired(uvc_state=state, filter_state=filter_state))
 
+    async def set_safety_lock(self, state: int):
+        """Lock (1) or unlock (0) the buttons on the spa's own control panel."""
+        return await self.send_device_command({"safety_lock": state})
+
     async def set_temperature_setting(self, temp: int):
         return await self.send_device_command({"temperature_setting": temp*2})
 
