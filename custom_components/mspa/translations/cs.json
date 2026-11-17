@@ -1,0 +1,116 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nastavení vířivky MSpa",
+        "description": "Zadejte přihlašovací údaje k účtu MSpa.\n\n{detected_info}",
+        "data": {
+          "email": "E-mail",
+          "password": "Heslo",
+          "region": "Region serveru"
+        },
+        "data_description": {
+          "email": "E-mail vašeho účtu MSpa",
+          "password": "Heslo k vašemu účtu MSpa",
+          "region": "Vyberte region serveru podle místa, kde vířivku používáte. Správný region se určí sám podle země nastavené v Home Assistantu, v případě potřeby ho ale můžete změnit."
+        }
+      },
+      "device": {
+        "title": "Výběr zařízení",
+        "description": "Na vašem účtu je víc zařízení MSpa. Vyberte to, které chcete přidat.",
+        "data": {
+          "device_id": "Zařízení"
+        },
+        "data_description": {
+          "device_id": "Která vířivka z tohoto účtu se má přidat. Jedna položka integrace obsluhuje jednu vířivku, pro druhou přidejte integraci znovu."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Připojení se nezdařilo",
+      "invalid_auth": "Neplatné přihlašovací údaje",
+      "unknown": "Neočekávaná chyba"
+    },
+    "abort": {
+      "already_configured": "Toto zařízení je už nastavené.",
+      "no_devices_available": "Všechna zařízení MSpa z tohoto účtu jsou už nastavená."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Nastavení integrace MSpa",
+        "description": "Nastavte příkony jednotlivých částí vířivky, aby sledování spotřeby odpovídalo skutečnosti. Výchozí hodnoty vychází ze specifikace vířivky a můžete je upravit podle vlastního měření.",
+        "data": {
+          "pump_power": "Příkon filtračního čerpadla (W)",
+          "bubble_power": "Příkon bublinek, stupeň 3 (W)",
+          "bubble_power_level_1": "Příkon bublinek, stupeň 1 (W)",
+          "bubble_power_level_2": "Příkon bublinek, stupeň 2 (W)",
+          "jet_power": "Příkon čerpadla vodních trysek (W)",
+          "heater_power_preheat": "Příkon topení při předehřevu (W)",
+          "heater_power_heat": "Příkon topení při plném ohřevu (W)",
+          "track_temperature_unit": "Po výpadku proudu vrátit vířivce °C/°F",
+          "always_enforce_unit": "Kontrolovat jednotku při každém dotazu, nejen po výpadku proudu",
+          "restore_state": "Po výpadku proudu obnovit předchozí nastavení",
+          "uvc_keep_filter": "Při přepínání UVC nechat běžet filtraci",
+          "heater_keep_filter": "Při vypnutí topení nechat běžet filtraci",
+          "weather_entity": "Entita počasí (nepovinné)",
+          "schedule_target_temp": "Cílová teplota plánovaného ohřevu",
+          "offline_after_minutes": "Považovat vířivku za odpojenou po (minuty)"
+        },
+        "data_description": {
+          "pump_power": "Příkon při běžícím filtračním čerpadle (obvykle 60 W)",
+          "bubble_power": "Příkon bublinek na plný výkon, stupeň 3 (obvykle 900 W)",
+          "bubble_power_level_1": "Příkon bublinek na stupni 1 (obvykle 300 W)",
+          "bubble_power_level_2": "Příkon bublinek na stupni 2 (obvykle 450 W)",
+          "jet_power": "Příkon při běžících vodních tryskách (obvykle 1100 W). Pokud vířivka trysky nemá, nastavte 0.",
+          "heater_power_preheat": "Příkon v režimu předehřevu (obvykle 1500 W)",
+          "heater_power_heat": "Příkon při plném ohřevu (obvykle 2000 W)",
+          "track_temperature_unit": "Vířivka po ztrátě napájení zapomene, jestli má nastavené stupně Celsia, nebo Fahrenheita. Po návratu do sítě se jednotka nastaví znovu podle Home Assistantu.",
+          "always_enforce_unit": "Pro vířivky, které jednotku zapomínají i bez výpadku proudu. Kontroluje se při každé aktualizaci a příkaz se pošle jen tehdy, když je jednotka opravdu špatně.",
+          "restore_state": "Po návratu vířivky do sítě se jí pošle zpět cílová teplota a nastavení, které měla před výpadkem proudu. Tato volba do vířivky zapisuje, takže ji nechte vypnutou, pokud nechcete, aby se cokoli nastavovalo za vás.",
+          "uvc_keep_filter": "Některé vířivky při přepnutí UVC zastaví filtrační čerpadlo, když je topení vypnuté, a časté starty čerpadla mohou vyvolat poruchu F1. Se zapnutou volbou příkazy pro UVC nechávají filtraci zapnutou. Zastavenou filtraci volba nikdy nespustí a neposílá se, když topení běží a vířivka drží čerpadlo sama. Platí jen pro příkazy z Home Assistantu, přepnutí UVC nebo topení na panelu vířivky čerpadlo dál zastaví. Ve výchozím stavu zapnuto, vypnutím se vrátíte k prostému příkazu s jedním polem.",
+          "heater_keep_filter": "Vypnutí topení nezastaví čerpadlo hned. Vířivka nejdřív propláchne okruh a čerpadlo zastaví až na konci, asi po minutě. Se zapnutou volbou se čerpadlo spustí znovu, jakmile je toto zastavení vidět, takže běží dál a vypnuté je jen krátce. Nic se neposílá, pokud čerpadlo už neběželo, pokud ho mezitím vypnete sami, pokud se topení znovu zapne, nebo pokud vířivka hlásí poruchu. Týká se jen vypnutí topení z Home Assistantu. Ve výchozím stavu zapnuto, vypnutím necháte chování na vířivce.",
+          "weather_entity": "Vyberte entitu počasí (například Met.no nebo OpenWeatherMap). Odhady ohřevu se pak upraví podle venkovní teploty a rychlosti větru a dřívější ohřevy se váží podle toho, jak se jejich podmínky podobaly těm současným.",
+          "schedule_target_temp": "Na jakou teplotu míří plánovaný ohřev, na rozdíl od teploty, kterou nastavujete ručně. Kdykoli ji změníte i entitou Schedule Target Temperature.",
+          "offline_after_minutes": "Jak dlouho smí vířivka mlčet, než ji senzor Connectivity ohlásí jako odpojenou. Krátké výpadky jsou běžné: výpadek internetu nebo vynechaný dotaz do cloudu se srovná do minuty."
+        }
+      }
+    }
+  },
+  "issues": {
+    "weather_forecast_unavailable": {
+      "title": "MSpa nemůže načíst předpověď počasí",
+      "description": "MSpa používá hodinovou předpověď z `{entity_id}`, aby určila, kdy začít topit kvůli naplánovanému času, a jak dlouho ještě potrvá právě běžící ohřev. Teď to nejde: {detail}.\n\nTopení i plánování fungují dál. Odhady se opírají o aktuální venkovní teplotu a potom o sezónní průměr, při kterém se tato vířivka naučila své rychlosti ohřevu. Zůstávají použitelné, ale jsou méně přesné, nejvíc u dlouhého nočního ohřevu, kde teplota v okamžiku plánování nepopisuje ani začátek, ani konec.\n\nZkontrolujte, že integrace počasí, která poskytuje `{entity_id}`, funguje a že entita nabízí předpověď. V nastavení MSpa můžete také vybrat jinou entitu počasí, nebo ji úplně odebrat. Toto upozornění zmizí samo, jakmile bude předpověď znovu čitelná."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "ready_status": {
+        "state": {
+          "ready": "Připraveno",
+          "heating": "Ohřívá se",
+          "scheduled": "Naplánováno"
+        }
+      },
+      "heat_schedule_status": {
+        "state": {
+          "not_scheduled": "Nenaplánováno",
+          "scheduled": "Naplánováno",
+          "waiting": "Čeká na start",
+          "start_now": "Spustit teď",
+          "heating": "Ohřívá se",
+          "ready": "Připraveno"
+        }
+      },
+      "heating_state": {
+        "state": {
+          "off": "Vypnuto",
+          "preheating": "Předehřev",
+          "heating": "Ohřev",
+          "holding": "Udržuje teplotu"
+        }
+      }
+    }
+  }
+}
