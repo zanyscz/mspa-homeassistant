@@ -646,6 +646,7 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
         # costs ten numbers per band and avoids discovering in the spring that the wrong
         # one was accumulated.
         self._band_stats: dict = {}
+        self._bucket_base_bucket: int | None = None
         self._bucket_base_value: float | None = None
         self._rate_last_time: float | None = None     # monotonic seconds at last sample
         # True while the rate anchor is phase-uncertain: the temperature reports
