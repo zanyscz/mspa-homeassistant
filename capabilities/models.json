@@ -1,4 +1,3 @@
-
 {
   "F-TU062W": {
     "supports_heater": true,
@@ -9,5 +8,16 @@
     "supports_uvc": true,
     "supports_ozone": true,
     "notes": "Derived from field testing; API does not implement server-side capability checks."
+  },
+  "F-AM063W": {
+    "supports_heater": true,
+    "supports_filter": true,
+    "supports_bubble": true,
+    "supports_bubble_level": true,
+    "supports_jet": true,
+    "supports_uvc": true,
+    "supports_ozone": true,
+    "supports_safety_lock": true,
+    "notes": "OSLO Amber, firmware 141 / mcu-3D0. Taken from the controls the MSpa Link app offers for this model (heater, bubble, jet, UVC, ozone, safety lock, temperature unit); safety lock confirmed by command on a real unit."
   }
 }
